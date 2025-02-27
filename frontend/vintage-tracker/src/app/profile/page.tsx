@@ -11,24 +11,42 @@ export default function Profile() {
     itemsTracked: 47
   });
 
-  const [recentSearches] = useState([
+  const [trackedSearches] = useState([
     {
       id: 1,
       query: "vintage levis 501",
       date: "2024-01-15",
-      results: 24
+      results: 24,
+      lastPrice: "$250"
     },
     {
       id: 2, 
       query: "70s band tees",
       date: "2024-01-14",
-      results: 16
+      results: 16,
+      lastPrice: "$175"
     },
     {
       id: 3,
       query: "nike windbreaker 90s",
       date: "2024-01-13", 
-      results: 8
+      results: 8,
+      lastPrice: "$120"
+    }
+  ]);
+
+  const [savedSearches] = useState([
+    {
+      id: 1,
+      query: "1950s denim jacket",
+      date: "2024-01-10",
+      maxPrice: "$300"
+    },
+    {
+      id: 2,
+      query: "vintage champion sweater",
+      date: "2024-01-08",
+      maxPrice: "$200"
     }
   ]);
 
@@ -40,7 +58,7 @@ export default function Profile() {
             My Profile
           </h1>
           
-          <div className="w-full max-w-4xl mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="w-full max-w-4xl mt-8 grid grid-cols-1 gap-8">
             <div className="p-6 rounded-xl border border-purple-200 dark:border-purple-800 dark:bg-gray-900">
               <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Profile Information</h2>
               <div className="space-y-4">
@@ -70,9 +88,36 @@ export default function Profile() {
             </div>
 
             <div className="p-6 rounded-xl border border-purple-200 dark:border-purple-800 dark:bg-gray-900">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Recent Searches</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Tracked Searches</h2>
               <div className="space-y-4">
-                {recentSearches.map((search) => (
+                {trackedSearches.map((search) => (
+                  <div 
+                    key={search.id}
+                    className="p-4 rounded-lg border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-lg font-medium text-gray-900 dark:text-white">{search.query}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{search.date}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="px-2 py-1 text-sm rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
+                          {search.results} results
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Last sold: {search.lastPrice}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 rounded-xl border border-purple-200 dark:border-purple-800 dark:bg-gray-900">
+              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Saved Searches</h2>
+              <div className="space-y-4">
+                {savedSearches.map((search) => (
                   <div 
                     key={search.id}
                     className="p-4 rounded-lg border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
@@ -83,7 +128,7 @@ export default function Profile() {
                         <p className="text-sm text-gray-600 dark:text-gray-400">{search.date}</p>
                       </div>
                       <span className="px-2 py-1 text-sm rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
-                        {search.results} results
+                        Max: {search.maxPrice}
                       </span>
                     </div>
                   </div>

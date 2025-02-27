@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface VintageClothing {
   id: string;
@@ -67,6 +68,7 @@ const mockItems: VintageClothing[] = [
 ];
 
 export default function Results() {
+  const router = useRouter();
   const [sortBy, setSortBy] = useState<"price" | "date">("date");
   const [filterType, setFilterType] = useState<"all" | "shirt" | "jeans" | "jacket">("all");
 
@@ -112,7 +114,8 @@ export default function Results() {
           {filteredAndSortedItems.map((item) => (
             <div 
               key={item.id}
-              className="flex flex-col gap-4 p-6 rounded-xl border border-purple-200 dark:border-purple-800 hover:shadow-lg transition-shadow dark:bg-gray-900"
+              onClick={() => router.push(`/item/${item.id}`)}
+              className="flex flex-col gap-4 p-6 rounded-xl border border-purple-200 dark:border-purple-800 hover:shadow-lg transition-shadow dark:bg-gray-900 cursor-pointer"
             >
               <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                 <img 
@@ -174,4 +177,3 @@ export default function Results() {
     </div>
   );
 }
-
