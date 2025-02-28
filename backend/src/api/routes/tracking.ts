@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { Request } from 'express';
 import { TrackingService } from '../../services/tracking.service';
 import { EbayScraper } from '../../services/ebay/scraper';
-import { SearchOptions } from '@vintdex/types';
+import { SearchOptions, TrackingRequestData } from '@vintdex/types';
 import { AppError } from '../middleware/error';
 
 const router = express.Router();
@@ -17,6 +17,7 @@ interface SearchQueryParams {
     page?: string
 }
 
+// TEST ENDPOINT
 router.get('/ebay_search', async (req, res, next) => {
     try {
         const { 
@@ -49,6 +50,23 @@ router.get('/ebay_search', async (req, res, next) => {
     } catch (error) {
         next(error instanceof AppError ? error : new AppError('Failed to search sold items', 500));
     }
+})
+
+router.post('/new', async (req: Request<{}, {}, TrackingRequestData>, res, next) => {
+    try {
+        const { imageData, title } = req.body;
+
+        if(!imageData || !title ) throw new AppError('Image data and title are required', 400);
+
+        const imageBuffer = Buffer.from(imageData, 'base64');
+        console.log('Got image buffer ', imageBuffer.length);
+        const trackingResult = await trackingService.trackNewItem(imageBuffer, title);
+        
+        res.send(trackingResult);
+    } catch (error) {
+        next(error instanceof AppError ? error : new AppError('Failed to search sold items', 500));
+    } 
+
 })
 
 export default router;

@@ -23,7 +23,7 @@ export class ParsingUtils {
         if (!url) return null;
         try {
           // Remove any tracking parameters and ensure HTTPS
-          const cleanUrl = url.split('?')[0].replace(/^http:/, 'https:');
+          const cleanUrl = url.split('?')[0].replace(/^http:/, 'https:').replace(/s-l\d+\.webp$/, "s-l1000.png");;
           return cleanUrl || null;
         } catch {
           return null;

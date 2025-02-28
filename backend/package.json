@@ -24,10 +24,14 @@
     "typescript-eslint": "^8.25.0"
   },
   "dependencies": {
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "@vintdex/types": "../types",
     "axios": "^1.8.1",
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "@vintdex/types": "workspace:*"
+    "natural": "^8.0.1"
   }
 }

@@ -10,3 +10,8 @@ export interface AppErrorType {
     message: string;
     statusCode: number;
 }
+
+export interface TrackingRequestData {
+    imageData: string;
+    title?: string;
+}
