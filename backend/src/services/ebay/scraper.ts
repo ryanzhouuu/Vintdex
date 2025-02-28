@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { SearchOptions, SoldItem } from './types';
+import { SearchOptions, SoldItem } from '@vintdex/types';
 import { AppError } from '../../api/middleware/error';
 import { ParsingUtils } from '../../utils/parsing.utils';
 
