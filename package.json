@@ -1,12 +1,20 @@
 {
+  "private": true,
   "name": "vintdex",
   "version": "1.0.0",
   "description": "Vintage item price tracker",
   "scripts": {
-    "client": "cd frontend/vintage-tracker && npm run dev",
-    "server": "cd server && node server.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install:all": "npm install && cd frontend/vintage-tracker && npm install && cd ../server && npm install"
+    "build:types": "cd types && tsc",
+    "build:backend": "cd backend && tsc",
+    "build": "npm run build:types && npm run build:backend",
+    "dev:frontend": "cd frontend/vintage-tracker && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "clean": "rimraf */dist */build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.0.0"
   },
   "license": "ISC"
 }

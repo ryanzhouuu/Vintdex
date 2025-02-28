@@ -1,7 +1,7 @@
 import express from 'express';
 import { TrackingService } from '../../services/tracking.service';
 import { EbayScraper } from '../../services/ebay/scraper';
-import { SearchOptions } from '../../services/ebay/types';
+import { SearchOptions } from '@vintdex/types';
 import { AppError } from '../middleware/error';
 
 const router = express.Router();
