@@ -32,12 +32,14 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.items}/${params.id}`);
-        if (!response.ok) throw new Error('Item not found');
+        const response = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.items}/${params.id}`
+        );
+        if (!response.ok) throw new Error("Item not found");
         const data = await response.json();
         setItem(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch item');
+        setError(err instanceof Error ? err.message : "Failed to fetch item");
       } finally {
         setLoading(false);
       }
@@ -59,7 +61,9 @@ export default function ItemPage({ params }: { params: { id: string } }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 dark:text-gray-400">{error || 'Item not found'}</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {error || "Item not found"}
+          </p>
         </div>
       </div>
     );
@@ -71,8 +75,8 @@ export default function ItemPage({ params }: { params: { id: string } }) {
         {/* Image Gallery */}
         <div className="space-y-4">
           <div className="aspect-square rounded-xl overflow-hidden">
-            <img 
-              src={item.images[selectedImage]} 
+            <img
+              src={item.images[selectedImage]}
               alt={item.name}
               className="w-full h-full object-cover"
             />
@@ -83,10 +87,16 @@ export default function ItemPage({ params }: { params: { id: string } }) {
                 key={index}
                 onClick={() => setSelectedImage(index)}
                 className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                  selectedImage === index ? 'border-purple-600' : 'border-transparent'
+                  selectedImage === index
+                    ? "border-purple-600"
+                    : "border-transparent"
                 }`}
               >
-                <img src={image} alt={`${item.name} view ${index + 1}`} className="w-full h-full object-cover" />
+                <img
+                  src={image}
+                  alt={`${item.name} view ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
               </button>
             ))}
           </div>
@@ -95,26 +105,42 @@ export default function ItemPage({ params }: { params: { id: string } }) {
         {/* Item Details */}
         <div className="space-y-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{item.name}</h1>
-            <p className="text-2xl font-semibold text-purple-600">${item.currentPrice}</p>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              {item.name}
+            </h1>
+            <p className="text-2xl font-semibold text-purple-600">
+              ${item.currentPrice}
+            </p>
           </div>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Brand</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{item.brand}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Brand
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {item.brand}
+                </p>
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Era</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{item.era}</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {item.era}
+                </p>
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Condition</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{item.condition}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Condition
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {item.condition}
+                </p>
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Seller Rating</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Seller Rating
+                </p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {item.seller.rating}/5 ({item.seller.itemsSold} sold)
                 </p>
@@ -124,7 +150,9 @@ export default function ItemPage({ params }: { params: { id: string } }) {
 
           <div>
             <h2 className="text-xl font-semibold mb-2">Description</h2>
-            <p className="text-gray-600 dark:text-gray-400">{item.description}</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {item.description}
+            </p>
           </div>
 
           <div>
@@ -150,4 +178,3 @@ export default function ItemPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-

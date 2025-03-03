@@ -54,7 +54,7 @@ export class EbayScraper {
         return `${this.BASE_URL}?${params.toString()}`;
     }
 
-    private parseSoldListings($: cheerio.CheerioAPI): SoldItem[] {
+    private parseSoldListings($: ReturnType<typeof cheerio.load>): SoldItem[] {
         const items: SoldItem[] = [];
 
         $('li.s-item.s-item__pl-on-bottom[data-viewport][id][data-view]').each((_, element) => {
@@ -71,7 +71,7 @@ export class EbayScraper {
         return items;
     }
 
-    private parseListingElement($: cheerio.CheerioAPI, element: any): SoldItem | null {
+    private parseListingElement($: ReturnType<typeof cheerio.load>, element: any): SoldItem | null {
         const wrapper = $(element);
 
         if(!wrapper.find('.s-item__title').length) {
