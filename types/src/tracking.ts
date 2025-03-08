@@ -18,3 +18,8 @@ export interface MatchResult {
   queryMatch: number;
   totalScore: number;
 }
+
+export interface PriceProjection {
+  projectedPrice: number;
+  confidence: number;
+}
