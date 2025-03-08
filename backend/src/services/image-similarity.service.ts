@@ -1,115 +1,88 @@
-import * as tf from '@tensorflow/tfjs-node';
-import * as mobilenet from '@tensorflow-models/mobilenet';
-import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import { pipeline } from '@xenova/transformers';
 import { ImageSimilarityScore } from '@vintdex/types';
 
 export class ImageSimilarityService {
-  private featureExtractor!: mobilenet.MobileNet;
-  private objectDetector!: cocoSsd.ObjectDetection;
+  private clipPipeline!: any;
   private isInitialized: boolean = false;
 
   constructor() {
-    this.initModels().catch(error => {
-      console.error('Failed to initialize models:', error);
+    this.initModel().catch(error => {
+      console.error('Failed to initialize CLIP model:', error);
       throw error;
     });
   }
 
-  private async initModels(): Promise<void> {
+  private async initModel(): Promise<void> {
     try {
-      this.featureExtractor = await mobilenet.load({
-        version: 2,
-        alpha: 1.0
-      });
-
-      this.objectDetector = await cocoSsd.load({
-        base: 'mobilenet_v2'
-      });
-
+      console.log('Initializing Fashion CLIP model...');
+      this.clipPipeline = await pipeline('image-feature-extraction', 'Xenova/clip-vit-large-patch14');
       this.isInitialized = true;
+      console.log('Fashion CLIP model initialized successfully');
     } catch (error) {
-      console.error('Error initializing models:', error);
+      console.error('Error initializing Fashion CLIP model:', error);
       throw error;
     }
   }
 
-  public async ensureInitialized(): Promise<void> {
+  private async ensureInitialized(): Promise<void> {
     if (!this.isInitialized) {
-      await this.initModels();
+      await this.initModel();
     }
-  }
-
-  private async extractItem(imageBuffer: Buffer): Promise<tf.Tensor3D> {
-    await this.ensureInitialized();
-    
-    // Decode image and ensure it's 3D
-    const image = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
-    if (!image) {
-      throw new Error("Failed to decode image. The image might be corrupted or invalid.");
-    }    
-    // Detect objects in the image
-    const predictions = await this.objectDetector.detect(image);
-    console.log("Predictions:", predictions);
-    
-    if (predictions.length === 0) {
-      console.warn("No objects detected, using full image.");
-      return tf.image.resizeBilinear(image, [224, 224]);
-    }
-
-    // Find the largest detected object (likely the main item)
-    const mainItem = predictions.reduce((largest, current) => {
-      const currentArea = current.bbox[2] * current.bbox[3];
-      const largestArea = largest ? largest.bbox[2] * largest.bbox[3] : 0;
-      return currentArea > largestArea ? current : largest;
-    });
-
-    if (!mainItem) {
-      console.warn("No valid object found, using full image.");
-      return tf.image.resizeBilinear(image, [224, 224]);
-    }
-
-    console.log("Largest detected object:", mainItem);
-
-    // Crop to the detected item
-    const [x, y, width, height] = mainItem.bbox;
-    
-    // Create a batch of one image (4D tensor) for cropping
-    const batched = image.expandDims(0) as tf.Tensor4D;
-    
-    const cropped = tf.image.cropAndResize(
-      batched,
-      [[y/image.shape[0], x/image.shape[1], 
-        (y+height)/image.shape[0], (x+width)/image.shape[1]]],
-      [0],
-      [224, 224]
-    );
-
-    // Return to 3D tensor and ensure proper shape
-    return cropped.squeeze([0]) as tf.Tensor3D;
   }
 
   private async getImageFeatures(imageBuffer: Buffer): Promise<Float32Array> {
     try {
-      // Extract the main item
-      const itemImage = await this.extractItem(imageBuffer);
+      await this.ensureInitialized();
+      console.log('Processing image buffer...');
+
+      const { default: sharp } = await import('sharp');
       
-      // Get features using MobileNet
-      const activation = this.featureExtractor.infer(
-        itemImage,
-        true // Set to true to get internal activations
-      );
+      const metadata = await sharp(imageBuffer).metadata();
+      console.log('Original image metadata:', metadata);
 
-      // Get the feature vector
-      const features = await (activation as tf.Tensor).data() as Float32Array;
+      const processedImageBuffer = await sharp(imageBuffer)
+        .resize(224, 224, { fit: 'cover' })
+        .normalize()
+        .modulate({
+          brightness: 1.1,
+        })
+        .jpeg({ quality: 95 })
+        .toBuffer();
 
-      if (!features || features.length === 0) {
-        throw new Error("Feature extraction failed: No features were extracted from the image.");
+      const blob = new Blob([processedImageBuffer], { type: 'image/jpeg' });
+      const imageUrl = URL.createObjectURL(blob);
+      console.log('Created blob URL for processed image');
+
+      try {
+        const output = await this.clipPipeline(imageUrl);
+        console.log('Raw output from CLIP:', output);
+
+        if (!output.data || output.data.length === 0) {
+          throw new Error('No embeddings received from CLIP model');
+        }
+
+        const features = new Float32Array(output.data);
+        
+        const maxVal = Math.max(...features.map(Math.abs));
+        const normalizedFeatures = new Float32Array(
+          features.map(val => {
+            const normalized = val / maxVal;
+            if (Math.abs(normalized) < 0.15) return 0;
+            return Math.sign(normalized) * Math.pow(Math.abs(normalized), 0.7);
+          })
+        );
+
+        console.log('Feature vector stats:', {
+          length: normalizedFeatures.length,
+          nonZero: normalizedFeatures.filter(v => v !== 0).length,
+          max: Math.max(...normalizedFeatures),
+          min: Math.min(...normalizedFeatures)
+        });
+        
+        return normalizedFeatures;
+      } finally {
+        URL.revokeObjectURL(imageUrl);
       }
-      
-      // Cleanup
-      tf.dispose([itemImage, activation]);
-      
-      return features;
     } catch (error) {
       console.error('Error extracting features:', error);
       throw error;
@@ -117,17 +90,60 @@ export class ImageSimilarityService {
   }
 
   private cosineSimilarity(features1: Float32Array, features2: Float32Array): number {
-    let dotProduct = 0;
-    let norm1 = 0;
-    let norm2 = 0;
+    try {
+      if (features1.length === 0 || features2.length === 0) {
+        console.error('Empty feature vectors received');
+        return 0;
+      }
 
-    for (let i = 0; i < features1.length; i++) {
-      dotProduct += features1[i] * features2[i];
-      norm1 += features1[i] * features1[i];
-      norm2 += features2[i] * features2[i];
+      if (features1.length !== features2.length) {
+        console.error(`Feature vector length mismatch: ${features1.length} vs ${features2.length}`);
+        return 0;
+      }
+
+      let strongMatches = 0;
+      let totalStrong = 0;
+      let dotProduct = 0;
+      let norm1 = 0;
+      let norm2 = 0;
+
+      for (let i = 0; i < features1.length; i++) {
+        if (Math.abs(features1[i]) > 0.3 || Math.abs(features2[i]) > 0.3) {
+          totalStrong++;
+          if (Math.sign(features1[i]) === Math.sign(features2[i]) && 
+              Math.abs(features1[i] - features2[i]) < 0.3) {
+            strongMatches++;
+          }
+        }
+
+        dotProduct += features1[i] * features2[i];
+        norm1 += features1[i] * features1[i];
+        norm2 += features2[i] * features2[i];
+      }
+
+      const similarity = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+      
+      const matchQuality = totalStrong > 0 ? strongMatches / totalStrong : 0;
+      console.log('Match quality:', matchQuality);
+
+      const combinedScore = (similarity * 0.6) + (matchQuality * 0.4);
+      
+      const finalScore = Math.pow(combinedScore, 0.7);
+
+      console.log('Similarity metrics:', {
+        rawSimilarity: similarity,
+        strongMatches,
+        totalStrong,
+        matchQuality,
+        combinedScore,
+        finalScore
+      });
+
+      return isNaN(finalScore) ? 0 : Math.min(1, Math.max(0, finalScore));
+    } catch (error) {
+      console.error('Error in similarity calculation:', error);
+      return 0;
     }
-
-    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
   }
 
   async compareSimilarity(
@@ -135,41 +151,51 @@ export class ImageSimilarityService {
     targetImageUrls: string[]
   ): Promise<ImageSimilarityScore[]> {
     try {
+      console.log('Starting similarity comparison...');
       const sourceFeatures = await this.getImageFeatures(sourceImageBuffer);
-      console.log('got source image features')
 
       const similarities = await Promise.all(
-        targetImageUrls.map(async (imageUrl) => {
+        targetImageUrls.map(async (imageUrl, index) => {
           try {
+            console.log(`Processing target image ${index + 1}/${targetImageUrls.length}`);
             const targetResponse = await fetch(imageUrl);
+            
             if (!targetResponse.ok) {
-              throw new Error(`Failed to fetch image: ${imageUrl}, Status: ${targetResponse.status}`);
+              throw new Error(`Failed to fetch image: ${imageUrl}`);
             }
-            const targetBuffer = await targetResponse.arrayBuffer();
-            const targetFeatures = await this.getImageFeatures(Buffer.from(targetBuffer));
-
+            
+            const targetBuffer = Buffer.from(await targetResponse.arrayBuffer());
+            const targetFeatures = await this.getImageFeatures(targetBuffer);
             const similarity = this.cosineSimilarity(sourceFeatures, targetFeatures);
-
+            
             return {
-              listingUrl: imageUrl,
               imageUrl: imageUrl,
-              similarityScore: similarity
+              similarityScore: similarity,
+              confidence: this.calculateConfidence(similarity)
             };
           } catch (error) {
             console.error(`Error processing image ${imageUrl}:`, error);
             return {
-              listingUrl: imageUrl,
               imageUrl: imageUrl,
-              similarityScore: 0
+              similarityScore: 0,
+              confidence: 0
             };
           }
         })
       );
 
+      console.log(`Found ${similarities.length} strong matches`);
       return similarities;
     } catch (error) {
       console.error('Error in similarity comparison:', error);
       throw error;
     }
+  }
+
+  private calculateConfidence(similarity: number): number {
+    if (similarity > 0.85) return 1.0;
+    if (similarity > 0.75) return 0.8;
+    if (similarity > 0.65) return 0.6;
+    return 0.0;
   }
 }

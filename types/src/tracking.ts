@@ -1,9 +1,9 @@
 import { SoldItem } from "./ebay";
 
 export interface ImageSimilarityScore {
-  listingUrl: string;
   imageUrl: string;
   similarityScore: number;
+  confidence: number
 }
 
 export interface QueryMatchScore {

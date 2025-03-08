@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-
+import cors from 'cors';
 // Middleware
 import { errorHandler } from './api/middleware/error';
 
@@ -13,6 +13,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 app.use('/api/search', searchRoutes);

@@ -13,6 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.5",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
@@ -28,8 +29,10 @@
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@vintdex/types": "../types",
+    "@xenova/transformers": "^2.17.2",
     "axios": "^1.8.1",
     "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "natural": "^8.0.1"

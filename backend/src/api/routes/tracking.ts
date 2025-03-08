@@ -64,6 +64,7 @@ router.post('/new', async (req: Request<{}, {}, TrackingRequestData>, res, next)
         
         res.send(trackingResult);
     } catch (error) {
+        console.error('Error in tracking route:', error);
         next(error instanceof AppError ? error : new AppError('Failed to search sold items', 500));
     } 
 

@@ -16,17 +16,10 @@ export class TrackingService {
         this.scraper = new EbayScraper();
     }
 
-    private async initialize() {
-        if (!this.isInitialized) {
-            await this.imageSimilarity.ensureInitialized();
-            this.isInitialized = true;
-        }
-    }
 
     async trackNewItem(sourceImage: Buffer, title: string): Promise<any> {
-        await this.initialize();
         const options: SearchOptions = {
-            results: "240",
+            results: "60",
             category: "11450"
         }
         const soldItems = await this.scraper.searchSoldItems(title, options);
@@ -36,12 +29,15 @@ export class TrackingService {
             soldItems.map(item => item.imageUrl || "")
         );
 
+        console.log('Image similarities: ', imageSimilarities);
+
         const results = soldItems.map((item, index) => ({
             soldItem: item,
             imageSimilarity: imageSimilarities[index].similarityScore,
+            confidence: imageSimilarities[index].confidence,
             queryMatch: this.queryMatcher.matchQuery(title, [item])[0].matchScore
         }))
-        .filter(result => result.imageSimilarity > 0.7)
+        .filter(result => result.imageSimilarity >= 0.55)
         .sort((a, b) => b.imageSimilarity - a.imageSimilarity);
 
         return {
