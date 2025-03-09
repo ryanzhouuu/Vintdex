@@ -1,15 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { login } from "@/api/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    console.log("Login attempt with:", email);
+    setError(null);
+    const response = await login(email, password);
+    if (response.error) {
+      setError(response.error);
+    } else {
+      window.location.href = 'dashboard';
+    }
   };
 
   return (
@@ -22,7 +29,7 @@ export default function Login() {
           Access your vintage collection and preferences
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-6">
+        <form onSubmit={handleLogin} className="w-full max-w-lg space-y-6">
           <div className="space-y-2">
             <input
               type="email"
@@ -50,6 +57,8 @@ export default function Login() {
             Sign In
           </button>
         </form>
+
+        {error && <p className="text-red-600">{error}</p>}
 
         <div className="flex flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
           <a

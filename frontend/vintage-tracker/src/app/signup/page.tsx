@@ -1,11 +1,26 @@
 "use client";
 
+import { signUp } from "@/api/auth";
 import { useState } from "react";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const response = await signUp(email, password);
+    if (response.error) {
+      setError(response.error);
+    } else {
+      setMessage('Check your email to confirm your account');
+    }
+  }
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -17,7 +32,7 @@ export default function Signup() {
           Create your Vintdex account
         </p>
 
-        <form className="w-full max-w-lg flex flex-col gap-6">
+        <form onSubmit={handleSignUp} className="w-full max-w-lg flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <label
               htmlFor="email"
@@ -28,6 +43,7 @@ export default function Signup() {
             <input
               id="email"
               type="email"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:text-white"
@@ -44,6 +60,7 @@ export default function Signup() {
             <input
               id="password"
               type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:text-white"
@@ -60,6 +77,7 @@ export default function Signup() {
             <input
               id="confirm-password"
               type="password"
+              placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:text-white"
@@ -73,6 +91,9 @@ export default function Signup() {
             Create Account
           </button>
         </form>
+
+        {error && <p className="text-red-600"></p>}
+        {message && <p className="text-green-500"></p>}
 
         <div className="flex flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
           <a
