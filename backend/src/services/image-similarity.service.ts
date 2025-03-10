@@ -24,7 +24,7 @@ export class ImageSimilarityService {
       this.isInitialized = true;
       console.log('Fashion CLIP model initialized successfully');
     } catch (error) {
-      console.error('Error initializing Fashion CLIP model:', error);
+      console.error('Error initializing CLIP model:', error);
       throw error;
     }
   }

@@ -1,5 +1,7 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
 import cors from 'cors';
 // Middleware
 import { errorHandler } from './api/middleware/error';
@@ -7,8 +9,6 @@ import { errorHandler } from './api/middleware/error';
 // Routes
 import searchRoutes from './api/routes/search';
 import trackingRoutes from './api/routes/tracking';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
