@@ -2,17 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { SearchTrackedItemsParams } from "@vintdex/types";
+import { searchTrackedItems } from "../../services/searchService";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/results?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
+      try {
+        const params: SearchTrackedItemsParams = { query: searchQuery.trim() };
+        const results = await searchTrackedItems(params);
+        console.log(results);
+        router.push(`/search/results?q=${encodeURIComponent(searchQuery.trim())}`);
+      } catch (error) {
+        console.error("Search failed", error);
+      }
+    };
+  }
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -24,7 +33,7 @@ export default function Search() {
           Find vintage items in our database
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-lg">
+        <form onSubmit={handleSearch} className="w-full max-w-lg">
           <div className="flex gap-4">
             <input
               type="text"

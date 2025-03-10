@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@vintdex/types": ["../types/src"]
+      "@vintdex/types": ["../../types/src"]
     }
   },
   "references": [

@@ -1,76 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-interface VintageClothing {
-  id: string;
-  name: string;
-  price: number;
-  dateSold: string;
-  condition: string;
-  type: "shirt" | "jeans" | "jacket";
-  brand: string;
-  size: string;
-  era: string;
-  material: string;
-  description: string;
-  seller: string;
-  imageUrl: string;
-}
-
-const mockItems: VintageClothing[] = [
-  {
-    id: "1",
-    name: "1970s Levi's 501 Jeans",
-    price: 450,
-    dateSold: "2023-11-15",
-    condition: "Good - Light Fading",
-    type: "jeans",
-    brand: "Levi's",
-    size: "32x34",
-    era: "1970s",
-    material: "Denim",
-    description: "Vintage Levi's 501 with redline selvedge. Big E. Natural fading and character.",
-    seller: "VintageDenim",
-    imageUrl: "/images/levis-501.jpg"
-  },
-  {
-    id: "2",
-    name: "1960s Champion Reverse Weave",
-    price: 280,
-    dateSold: "2023-11-14",
-    condition: "Excellent",
-    type: "shirt",
-    brand: "Champion",
-    size: "L",
-    era: "1960s",
-    material: "Cotton",
-    description: "Vintage Champion reverse weave sweatshirt. Original blue bar tag.",
-    seller: "VintageAthletic",
-    imageUrl: "/images/champion-sweater.jpg"
-  },
-  {
-    id: "3",
-    name: "1980s Schott Perfecto Leather Jacket",
-    price: 890,
-    dateSold: "2023-11-13",
-    condition: "Very Good",
-    type: "jacket",
-    brand: "Schott",
-    size: "40",
-    era: "1980s",
-    material: "Leather",
-    description: "Classic Schott Perfecto motorcycle jacket. Beautiful patina, original hardware.",
-    seller: "VintageLeather",
-    imageUrl: "/images/schott-jacket.jpg"
-  }
-];
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { SearchTrackedItemsParams, SearchTrackedItemsResponse } from "@vintdex/types";
+import { searchTrackedItems } from "../../services/searchService";
 
 export default function Results() {
   const router = useRouter();
+  const [results, setResults] = useState<SearchTrackedItemsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q");
   const [sortBy, setSortBy] = useState<"price" | "date">("date");
   const [filterType, setFilterType] = useState<"all" | "shirt" | "jeans" | "jacket">("all");
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (query) {
+        try {
+          const params: SearchTrackedItemsParams = { query };
+          const response = await searchTrackedItems(params);
+          setResults(response);
+        } catch (error) {
+          console.error("Failed to fetch search results", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchResults();
+  }, [query]);
+
+  const items = results?.items || [];
 
   const filteredAndSortedItems = [...mockItems]
     .filter(item => filterType === "all" || item.type === filterType)
@@ -80,6 +42,12 @@ export default function Results() {
       }
       return new Date(b.dateSold).getTime() - new Date(a.dateSold).getTime();
     });
+
+  if (loading) return <p>Loading...</p>;
+
+  if (!results || !results.items.length) {
+    return <div>No Results Found</div>
+  }
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -111,7 +79,7 @@ export default function Results() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {filteredAndSortedItems.map((item) => (
+          {items.map((item) => (
             <div 
               key={item.id}
               onClick={() => router.push(`/item/${item.id}`)}
@@ -119,27 +87,24 @@ export default function Results() {
             >
               <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                 <img 
-                  src={item.imageUrl} 
-                  alt={item.name}
+                  src={item.image_path ? item.image_path : "/placeholder.jpg"} 
+                  alt={item.title}
                   className="w-full h-full object-cover"
                 />
               </div>
               
               <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{item.name}</h2>
-                <p className="text-2xl font-bold text-purple-600">${item.price.toLocaleString()}</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{item.title}</h2>
+                <p className="text-2xl font-bold text-purple-600">${item.price_data}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Sold on {new Date(item.dateSold).toLocaleDateString()}
+                  Sold on {new Date(item.created_at).toLocaleDateString()}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
-                    {item.condition}
+                    {item.category}
                   </span>
                   <span className="px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
-                    {item.era}
-                  </span>
-                  <span className="px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
-                    Size: {item.size}
+                    {item.decade}
                   </span>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
