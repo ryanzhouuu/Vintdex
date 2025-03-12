@@ -137,23 +137,7 @@ export class SupabaseService {
     }: SearchTrackedItemsParams) {
         let dbQuery = this.client
             .from('tracked_items')
-            .select(`
-                *,
-                tracked_items_sold_listings!inner (
-                    sold_listing:sold_listings (
-                        id,
-                        price,
-                        currency,
-                        sold_date,
-                        condition,
-                        size,
-                        listing_url,
-                        listing_id,
-                        platform,
-                        created_at
-                    )
-                )
-            `, { count: 'exact' });
+            .select(`*`, { count: 'exact' });
 
         if (query) {
             dbQuery = dbQuery.textSearch('title', query, {
@@ -203,16 +187,8 @@ export class SupabaseService {
         const { data, count, error } = await dbQuery;
         if (error) throw error;
 
-        // Transform the nested join data into a flattened structure
-        const transformedData = data?.map(item => ({
-            ...item,
-            sold_listings: item.tracked_items_sold_listings.map(
-                (relation: any) => relation.sold_listing
-            )
-        }));
-
         return { 
-            data: transformedData, 
+            data, 
             count 
         };
     }
@@ -222,5 +198,42 @@ export class SupabaseService {
             .from('tracked_item_images')
             .getPublicUrl(imagePath);
         return data.publicUrl;
+    }
+
+    async getTrackedItemById(id: string) {
+        const { data: item, error: itemError } = await this.client
+            .from('tracked_items')
+            .select(`
+                *,
+                tracked_items_sold_listings!inner (
+                    sold_listing:sold_listings (
+                        id,
+                        price,
+                        currency,
+                        sold_date,
+                        condition,
+                        size,
+                        listing_url,
+                        listing_id,
+                        platform,
+                        created_at
+                    )
+                )
+            `)
+            .eq('id', id)
+            .single();
+
+        if (itemError) throw itemError;
+        if (!item) throw new Error('Item not found');
+
+        // Transform the nested join data into a flattened structure
+        const transformedItem = {
+            ...item,
+            sold_listings: item.tracked_items_sold_listings.map(
+                (relation: any) => relation.sold_listing
+            )
+        };
+        
+        return transformedItem;
     }
 }

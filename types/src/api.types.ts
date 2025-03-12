@@ -39,8 +39,8 @@ export interface SearchTrackedItemsParams {
 }
 
 export interface TrackedItemData extends TrackedItem {
-    image_url: string,
-    sold_listings: SoldListing[]
+    image_url?: string,
+    sold_listings?: SoldListing[]
 }
 
 export interface SearchTrackedItemsResponse {
