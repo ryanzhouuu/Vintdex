@@ -1,4 +1,4 @@
-import { SoldItem } from "./ebay";
+import { SoldItem } from "./ebay.types";
 
 export interface ImageSimilarityScore {
   imageUrl: string;

@@ -1,4 +1,4 @@
-import { SoldListing, TrackedItem } from "./supabase";
+import { SoldListing, TrackedItem } from "./supabase.types";
 
 export interface ApiResponse<T> {
     success: boolean;
