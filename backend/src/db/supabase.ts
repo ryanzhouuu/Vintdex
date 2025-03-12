@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Database, SoldListing, TrackedItem } from '@vintdex/types';
+import { Database, SoldListing, TrackedItem, SearchTrackedItemsParams } from '@vintdex/types';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -122,5 +122,105 @@ export class SupabaseService {
             console.error('Error creating new tracked item', error);
             throw error;
         }
+    }
+
+    async searchTrackedItems({
+        query,
+        brand,
+        decade,
+        category,
+        minPrice,
+        maxPrice,
+        sortBy,
+        limit = 20,
+        offset = 0
+    }: SearchTrackedItemsParams) {
+        let dbQuery = this.client
+            .from('tracked_items')
+            .select(`
+                *,
+                tracked_items_sold_listings!inner (
+                    sold_listing:sold_listings (
+                        id,
+                        price,
+                        currency,
+                        sold_date,
+                        condition,
+                        size,
+                        listing_url,
+                        listing_id,
+                        platform,
+                        created_at
+                    )
+                )
+            `, { count: 'exact' });
+
+        if (query) {
+            dbQuery = dbQuery.textSearch('title', query, {
+                type: 'websearch',
+                config: 'english'
+            });
+        }
+
+        if (brand) {
+            dbQuery = dbQuery.ilike('brand', `%${brand}%`);
+        }
+
+        if (decade) {
+            dbQuery = dbQuery.eq('decade', decade);
+        }
+
+        if (category) {
+            dbQuery = dbQuery.eq('category', category);
+        }
+
+        if (minPrice) {
+            dbQuery = dbQuery.gte('projected_price', minPrice);
+        }
+
+        if (maxPrice) {
+            dbQuery = dbQuery.lte('projected_price', maxPrice);
+        }
+
+        if (sortBy) {
+            switch(sortBy) {
+                case 'price_asc':
+                    dbQuery = dbQuery.order('projected_price', { ascending: true });
+                    break;
+                case 'price_desc':
+                    dbQuery = dbQuery.order('projected_price', { ascending: false });
+                    break;
+                case 'created_at_desc':
+                    dbQuery = dbQuery.order('created_at', { ascending: false });
+                    break;
+            }
+        } else {
+            dbQuery = dbQuery.order('created_at', { ascending: true });
+        }
+
+        dbQuery = dbQuery.range(offset, offset + limit - 1);
+
+        const { data, count, error } = await dbQuery;
+        if (error) throw error;
+
+        // Transform the nested join data into a flattened structure
+        const transformedData = data?.map(item => ({
+            ...item,
+            sold_listings: item.tracked_items_sold_listings.map(
+                (relation: any) => relation.sold_listing
+            )
+        }));
+
+        return { 
+            data: transformedData, 
+            count 
+        };
+    }
+
+    async getPublicImageUrl(imagePath: string) {
+        const { data } = await this.client.storage
+            .from('tracked_item_images')
+            .getPublicUrl(imagePath);
+        return data.publicUrl;
     }
 }

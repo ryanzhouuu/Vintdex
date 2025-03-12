@@ -10,89 +10,12 @@ export class SearchService {
 
     async searchTrackedItems(params: SearchTrackedItemsParams): Promise<SearchTrackedItemsResponse> {
         try {
-            let query = this.supabase.getClient()
-                .from('tracked_items')
-                .select(`
-                    *,
-                    tracked_items_sold_listings!inner (
-                        sold_listings (
-                            id,
-                            price,
-                            currency,
-                            sold_date,
-                            condition,
-                            size,
-                            listing_url,
-                            listing_id,
-                            platform
-                        )
-                    )
-                `, { count: 'exact' });
-
-            if (params.query) {
-                query = query.textSearch('title', params.query, {
-                    type: 'websearch',
-                    config: 'english'
-                });
-            }
-
-            if(params.brand) {
-                query = query.ilike('brand', `%${params.brand}%`);
-            }
-
-            if(params.decade) {
-                query = query.ilike('decade', params.decade);
-            }
-
-            if(params.category) {
-                query = query.ilike('category', params.category);
-            }
-
-            if(params.minPrice) {
-                query = query.gte('projected_price', params.minPrice);
-            }
-    
-            if(params.maxPrice) {
-                query = query.lte('projected_price', params.maxPrice);
-            }
-
-            if(params.sortBy) {
-                switch(params.sortBy) {
-                    case 'price_asc':
-                        query = query.order('projected_price', { ascending: true });
-                        break;
-                    case 'price_desc':
-                        query = query.order('projected_price', { ascending: false });
-                        break;
-                    case 'created_at_desc':
-                        query = query.order('created_at', { ascending: false });
-                        break;
-                }
-            } else {
-                query = query.order('created_at', { ascending: true });
-            }
-
-            const limit = params.limit || 20;
-            const offset = params.offset || 0;
-            query = query.range(offset, offset + limit - 1);
-
-            const { data: items, count, error } = await query;
-
-            if (error) throw error;
+            const { data: items, count } = await this.supabase.searchTrackedItems(params);
 
             const processedItems = await Promise.all((items || []).map(async (item) => {
-                let imageUrl = null;
-                if (item.image_path) {
-                    const {data: urlData} = await this.supabase.getClient().storage
-                        .from('tracked_item_images')
-                        .getPublicUrl(item.image_path);
-
-                    imageUrl = urlData.publicUrl;
-                }
-
-                const soldData = item.tracked_items_sold_listings
-                    .map((relation: any) => relation.sold_listings)
-                    .filter(Boolean);
+                const imageUrl = item.image_path 
+                    ? await this.supabase.getPublicImageUrl(item.image_path)
+                    : null;
 
                 return {
                     id: item.id,
@@ -103,19 +26,19 @@ export class SearchService {
                     projected_price: item.projected_price,
                     created_at: item.created_at,
                     updated_at: item.updated_at,
-                    imageUrl,
-                    sold_listings: soldData
+                    image_url: imageUrl,
+                    sold_listings: item.sold_listings
                 } as TrackedItemData;
             }));
 
             return {
                 items: processedItems,
                 total: count || 0,
-                offset,
-                limit
-            }
+                offset: params.offset || 0,
+                limit: params.limit || 20
+            };
         } catch(error) {
-            console.error('Error searching for tracked items');
+            console.error('Error searching for tracked items', error);
             throw error;
         }
     }
