@@ -1,4 +1,4 @@
-import { SearchTrackedItemsParams, SearchTrackedItemsResponse, TrackedItem } from "@vintdex/types";
+import { SearchTrackedItemsParams, SearchTrackedItemsResponse, TrackedItem, TrackedItemData } from "@vintdex/types";
 import { SupabaseService } from "../db/supabase";
 
 export class SearchService {
@@ -12,7 +12,22 @@ export class SearchService {
         try {
             let query = this.supabase.getClient()
                 .from('tracked_items')
-                .select('*', { count: 'exact' });
+                .select(`
+                    *,
+                    tracked_items_sold_listings!inner (
+                        sold_listings (
+                            id,
+                            price,
+                            currency,
+                            sold_date,
+                            condition,
+                            size,
+                            listing_url,
+                            listing_id,
+                            platform
+                        )
+                    )
+                `, { count: 'exact' });
 
             if (params.query) {
                 query = query.textSearch('title', params.query, {
@@ -66,17 +81,31 @@ export class SearchService {
             if (error) throw error;
 
             const processedItems = await Promise.all((items || []).map(async (item) => {
+                let imageUrl = null;
                 if (item.image_path) {
                     const {data: urlData} = await this.supabase.getClient().storage
                         .from('tracked_item_images')
                         .getPublicUrl(item.image_path);
 
-                    return {
-                        ...item,
-                        image_url: urlData.publicUrl
-                    }
+                    imageUrl = urlData.publicUrl;
                 }
-                return item;
+
+                const soldData = item.tracked_items_sold_listings
+                    .map((relation: any) => relation.sold_listings)
+                    .filter(Boolean);
+
+                return {
+                    id: item.id,
+                    title: item.title,
+                    brand: item.brand,
+                    category: item.category,
+                    decade: item.decade,
+                    projected_price: item.projected_price,
+                    created_at: item.created_at,
+                    updated_at: item.updated_at,
+                    imageUrl,
+                    sold_listings: soldData
+                } as TrackedItemData;
             }));
 
             return {

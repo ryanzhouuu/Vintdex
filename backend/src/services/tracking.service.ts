@@ -1,7 +1,7 @@
 import { EbayScraper } from "./ebay/scraper";
 import { ImageSimilarityService } from "./image-similarity.service";
 import { QueryMatcherService } from "./query-matcher.service";
-import { ApiResponse, MatchResult, PriceDataEntry, SearchOptions, SoldItem } from "@vintdex/types";
+import { ApiResponse, MatchResult, SearchOptions, SoldItem, SoldListing, TrackingResponse } from "@vintdex/types";
 import { AppError } from '../api/middleware/error';
 import { SupabaseService } from "../db/supabase";
 import { projectPrice } from "../utils/price-analysis";
@@ -30,7 +30,7 @@ export class TrackingService {
         return soldItems;
     }
 
-    async trackNewItem(sourceImage: Buffer, title: string, category: string, decade: string, brand: string): Promise<any> {
+    async trackNewItem(sourceImage: Buffer, title: string, category: string, decade: string, brand: string): Promise<TrackingResponse> {
         // TODO: Add a check to see if the item has been sold before
 
         // Search for sold items
@@ -55,20 +55,21 @@ export class TrackingService {
 
         const projectedPrice = projectPrice(results.map((item) => item.soldItem));
         
-        const priceData = results.map((item) => <PriceDataEntry>{
+        const soldListings = results.map((item) => <SoldListing>{
             price: item.soldItem.soldPrice.value,
             currency: item.soldItem.soldPrice.currency,
             sold_date: item.soldItem.soldDate.toISOString(),
             condition: item.soldItem.condition,
             size: 'XL',
             listing_url: item.soldItem.listingUrl,
-            listing_id: item.soldItem.listingUrl?.split('/').pop()
+            listing_id: item.soldItem.listingUrl?.split('/').pop(),
+            platform: 'ebay'
         });
 
         const trackedItem = await this.supabase.createTrackedItem({
             title,
             decade,
-            price_data: priceData,
+            sold_listings: soldListings,
             projected_price: Number(projectedPrice?.projectedPrice.toFixed(2)),
             category,
             brand,

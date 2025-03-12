@@ -1,4 +1,4 @@
-import { TrackedItem } from "./supabase";
+import { SoldListing, TrackedItem } from "./supabase";
 
 export interface ApiResponse<T> {
     success: boolean;
@@ -21,6 +21,11 @@ export interface TrackingRequestData {
     brand: string;
 }
 
+export interface TrackingResponse {
+    success: boolean,
+    data: TrackedItem
+}
+
 export interface SearchTrackedItemsParams {
     query: string;
     category?: string;
@@ -33,8 +38,13 @@ export interface SearchTrackedItemsParams {
     sortBy?: 'price_asc' | 'price_desc' | 'created_at_desc';
 }
 
+export interface TrackedItemData extends TrackedItem {
+    imageUrl: string,
+    sold_listings: SoldListing[]
+}
+
 export interface SearchTrackedItemsResponse {
-    items: TrackedItem[];
+    items: TrackedItemData[];
     total: number;
     offset: number;
     limit: number;
