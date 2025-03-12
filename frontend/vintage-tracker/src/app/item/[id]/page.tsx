@@ -2,29 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { API_BASE_URL, API_ENDPOINTS } from "@/api/config";
+import { supabase } from "@/utils/supabaseClient";
+import { TrackedItem } from '@vintdex/types';
 
-interface ItemDetails {
-  id: string;
-  name: string;
-  description: string;
-  brand: string;
-  era: string;
-  condition: string;
-  currentPrice: number;
-  historicalPrices: {
-    date: string;
-    price: number;
-  }[];
-  images: string[];
-  seller: {
-    name: string;
-    rating: number;
-    itemsSold: number;
-  };
+// async function to get props from dynamically routed component
+// takes in the id that is given and fetches the corresponding item element from the database
+export async function getServerSideProps({ params }: { params: { id: string } }) {
+  const { data: user, error } = await supabase
+    .from('tracked_items')
+    .select('*')
+    .eq('id', params.id)
+    .single();
+
+    if (error) {
+      console.error(error);
+      return { notFound: true };
+    }
+
+    return {
+      props: { user },
+    };
 }
 
+// item page component
+// displays information about a tracked item
+// including title, projected price, category, brand, etc
 export default function ItemPage({ params }: { params: { id: string } }) {
-  const [item, setItem] = useState<ItemDetails | null>(null);
+  const [item, setItem] = useState<TrackedItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);

@@ -95,7 +95,7 @@ export default function Results() {
               
               <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{item.title}</h2>
-                <p className="text-2xl font-bold text-purple-600">${item.price_data}</p>
+                <p className="text-2xl font-bold text-purple-600">${item.price_data || []}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Sold on {new Date(item.created_at).toLocaleDateString()}
                 </p>
