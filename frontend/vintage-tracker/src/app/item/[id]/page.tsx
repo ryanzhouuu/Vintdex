@@ -5,6 +5,13 @@ import { API_BASE_URL, API_ENDPOINTS } from "@/api/config";
 import { supabase } from "@/utils/supabaseClient";
 import { TrackedItem } from '@vintdex/types';
 
+type ItemProps = {
+  item: {
+    id: number,
+    
+  }
+}
+
 // async function to get props from dynamically routed component
 // takes in the id that is given and fetches the corresponding item element from the database
 export async function getServerSideProps({ params }: { params: { id: string } }) {

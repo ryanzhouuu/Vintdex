@@ -1,23 +1,18 @@
+import { supabase } from "@/utils/supabaseClient"; 
+
 export const signUp = async (email: string, password: string) => {
-    const res = await fetch('https://localhost:5000/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
-
-    return res.json();
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
 }
 
-export const login = async (email: string, password: string) => {
-    const res = await fetch('https://localhost:5000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    })
-
-    return res.json();
+export const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
 }
 
-export const logout = async () => {
-    await fetch('http://localhost:5000/auth/logout', { method: 'POST' });
-  };
+export const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+}

@@ -1,21 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { login } from "@/api/auth";
+import { signIn } from "@/api/auth";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setError(null);
-    const response = await login(email, password);
+    const response = await signIn(email, password);
     if (response.error) {
       setError(response.error);
     } else {
-      window.location.href = 'dashboard';
+      window.location.href = 'search';
     }
   };
 

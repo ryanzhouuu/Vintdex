@@ -1,54 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Profile() {
-  const [user] = useState({
-    email: "user@example.com",
-    name: "John Doe",
-    joinDate: "January 2024",
-    savedSearches: 12,
-    itemsTracked: 47
-  });
+  const { user, loading, signOut } = useAuth();
 
-  const [trackedSearches] = useState([
-    {
-      id: 1,
-      query: "vintage levis 501",
-      date: "2024-01-15",
-      results: 24,
-      lastPrice: "$250"
-    },
-    {
-      id: 2, 
-      query: "70s band tees",
-      date: "2024-01-14",
-      results: 16,
-      lastPrice: "$175"
-    },
-    {
-      id: 3,
-      query: "nike windbreaker 90s",
-      date: "2024-01-13", 
-      results: 8,
-      lastPrice: "$120"
-    }
-  ]);
-
-  const [savedSearches] = useState([
-    {
-      id: 1,
-      query: "1950s denim jacket",
-      date: "2024-01-10",
-      maxPrice: "$300"
-    },
-    {
-      id: 2,
-      query: "vintage champion sweater",
-      date: "2024-01-08",
-      maxPrice: "$200"
-    }
-  ]);
+  if (loading || !user) return <div>Loading...</div>;
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -68,12 +26,13 @@ export default function Profile() {
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 dark:text-gray-400">Name</label>
-                  <p className="text-lg text-gray-900 dark:text-white">{user.name}</p>
+                  <p className="text-lg text-gray-900 dark:text-white">{user.email}</p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 dark:text-gray-400">Member Since</label>
-                  <p className="text-lg text-gray-900 dark:text-white">{user.joinDate}</p>
+                  <p className="text-lg text-gray-900 dark:text-white">{user.created_at}</p>
                 </div>
+                {/*
                 <div className="flex gap-8 mt-6">
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-400">Saved Searches</label>
@@ -84,8 +43,11 @@ export default function Profile() {
                     <p className="text-2xl font-bold text-purple-600">{user.itemsTracked}</p>
                   </div>
                 </div>
+                */}
               </div>
             </div>
+
+          {/*
 
             <div className="p-6 rounded-xl border border-purple-200 dark:border-purple-800 dark:bg-gray-900">
               <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Tracked Searches</h2>
@@ -114,6 +76,9 @@ export default function Profile() {
               </div>
             </div>
 
+            */}
+
+            {/*
             <div className="p-6 rounded-xl border border-purple-200 dark:border-purple-800 dark:bg-gray-900">
               <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Saved Searches</h2>
               <div className="space-y-4">
@@ -135,6 +100,8 @@ export default function Profile() {
                 ))}
               </div>
             </div>
+            */}
+
           </div>
         </div>
       </main>
