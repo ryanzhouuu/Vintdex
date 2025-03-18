@@ -2,23 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SearchTrackedItemsParams } from "@vintdex/types";
 import { searchTrackedItems } from "../../services/searchService";
 
 export default function Search() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setLoading(true);
+
       try {
-        const params: SearchTrackedItemsParams = { query: searchQuery.trim() };
-        const results = await searchTrackedItems(params);
-        console.log(results);
-        router.push(`/search/results?q=${encodeURIComponent(searchQuery.trim())}`);
+        const results = await searchTrackedItems(searchQuery.trim());
+        setResults(results || []);
+        //router.push(`/search/results?q=${encodeURIComponent(searchQuery.trim())}`);
       } catch (error) {
         console.error("Search failed", error);
+      } finally {
+        setLoading(false);
       }
     };
   }
@@ -46,16 +50,32 @@ export default function Search() {
               type="submit"
               className="px-8 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white transition-colors"
             >
-              Search
+              {loading ? 'Searching...' : 'Search'}
             </button>
           </div>
         </form>
-
         <div className="w-full mt-8">
           <p className="text-gray-500 dark:text-gray-400">
             Enter a search term to begin
           </p>
         </div>
+
+        <div className="w-full mt-8">
+          {results.length > 0 ? (
+            <ul className="grid gap-4">
+              {results.map((item) => (
+                <li key={item.title} className="border border-purple-300 dark:border-purple-800 rounded-lg p-4 hover:bg-purple-50 dark:hover:bg-purple-800/50 transition">
+                  <p className="text-gray-600 dark:text-gray-400">${item.projected_price}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">
+              {loading ? 'Searching...' : 'No items found.'}
+            </p>
+          )}
+        </div>
+
       </main>
 
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center text-sm text-gray-600 dark:text-gray-400">

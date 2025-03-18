@@ -1,12 +1,18 @@
-import { SearchTrackedItemsParams, SearchTrackedItemsResponse } from '@vintdex/types';
+import { TrackedItem } from '@vintdex/types';
+import { supabase } from '@/utils/supabaseClient';
 
-export const searchTrackedItems = async (params: SearchTrackedItemsParams): Promise<SearchTrackedItemsResponse> => {
-    const queryString = new URLSearchParams(params as any).toString();
-    const response = await fetch(`/api/search?q=${queryString}`);
+export const searchTrackedItems = async (query: string) => {
+    try {
+        const { data, error } = await supabase
+        .from('tracked_items')
+        .select("*")
+        .ilike('title', `%${query}%`);
 
-    if (!response.ok) {
-        throw new Error("Failed to search for tracked items");
+        if (error) throw error;
+        console.log(data);
+        return data;
+    } catch (error) {
+        console.error('Error searching items: ', error);
+        return null;
     }
-
-    return response.json();
-}
+};
