@@ -12,7 +12,7 @@ export default function Search() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+      if (searchQuery.trim()) {
       setLoading(true);
 
       try {
@@ -26,6 +26,10 @@ export default function Search() {
       }
     };
   }
+
+  const handleItemClick = (id: string) => {
+    router.push(`/item/${id}`);
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -64,8 +68,25 @@ export default function Search() {
           {results.length > 0 ? (
             <ul className="grid gap-4">
               {results.map((item) => (
-                <li key={item.title} className="border border-purple-300 dark:border-purple-800 rounded-lg p-4 hover:bg-purple-50 dark:hover:bg-purple-800/50 transition">
-                  <p className="text-gray-600 dark:text-gray-400">${item.projected_price}</p>
+                <li 
+                key={item.title} 
+                className="border border-purple-300 dark:border-purple-800 rounded-lg p-4 hover:bg-purple-50 dark:hover:bg-purple-800/50 transition"
+                onClick={() => handleItemClick(item.id)}
+                aria-label={`Go to ${item.title}`}
+                >
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {item.title}
+                  </p>
+                  {item.image_path && (
+                    <img 
+                      src={item.image_path} 
+                      alt={item.title}
+                      className="w-full h-48 object-cover rounded-md mt-2"
+                    />
+                  )}
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Projected Price: ${item.projected_price}
+                  </p>
                 </li>
               ))}
             </ul>

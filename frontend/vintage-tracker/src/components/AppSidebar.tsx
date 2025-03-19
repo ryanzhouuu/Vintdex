@@ -33,25 +33,32 @@ export const AppSidebar = () => {
             <SidebarHeader>
                 Vintdex
             </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {menuItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
-                                        <a href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </a>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+
+            <SidebarContent className="flex flex-col h-full">
+                <div>
+                    <SidebarGroup>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {menuItems.map((item) => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton asChild>
+                                            <Link href={item.url}>
+                                                <div className="flex items-center gap-2">
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </div>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </div>
+
+                {/* Sign In/Out at the bottom */}
                 {user ?
-                <SidebarGroup>
+                <SidebarGroup className="mt-auto">
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>
@@ -63,7 +70,7 @@ export const AppSidebar = () => {
                     </SidebarGroupContent>
                 </SidebarGroup>
                 : 
-                <SidebarGroup>
+                <SidebarGroup className="mt-auto">
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>

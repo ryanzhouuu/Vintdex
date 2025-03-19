@@ -7,9 +7,7 @@ export const searchTrackedItems = async (query: string) => {
         .from('tracked_items')
         .select("*")
         .ilike('title', `%${query}%`);
-
         if (error) throw error;
-        console.log(data);
         return data;
     } catch (error) {
         console.error('Error searching items: ', error);
